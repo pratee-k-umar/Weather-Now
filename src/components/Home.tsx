@@ -4,7 +4,12 @@ interface HomeProps {
   is24Hour: boolean;
 }
 
-export default function Home({ is24Hour }): HomeProps {
+interface CachedWeatherData {
+  data: any;
+  timestamp: number;
+}
+
+export default function Home({ is24Hour }: HomeProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
@@ -12,6 +17,8 @@ export default function Home({ is24Hour }): HomeProps {
   const [error, setError] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -90,24 +97,55 @@ export default function Home({ is24Hour }): HomeProps {
     };
   };
 
+  const getStoredWeatherData = () => {
+    const storedData = localStorage.getItem("weatherData");
+    if (!storedData) return null;
+
+    const cachedData: CachedWeatherData = JSON.parse(storedData);
+    const now = new Date().getTime();
+
+    // Check if cache is still valid (less than 5 minutes old)
+    if (now - cachedData.timestamp < CACHE_DURATION) {
+      return cachedData.data;
+    }
+    return null;
+  };
+
   useEffect(() => {
     const fetchWeather = async () => {
       if (!latitude || !longitude) return;
 
+      // Check cache first
+      const cachedData = getStoredWeatherData();
+      if (cachedData) {
+        console.log("Using cached weather data");
+        setWeatherData(cachedData);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-
         const weather_data = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
         );
         const weather_json = await weather_data.json();
-        setWeatherData({
+
+        const newWeatherData = {
           temperature: weather_json.current_weather.temperature,
           windSpeed: weather_json.current_weather.windspeed,
           weatherCode: weather_json.current_weather.weathercode,
           humidity: weather_json.current_weather.humidity || 50,
-        });
+        };
 
+        // Store in localStorage with timestamp
+        const cacheData: CachedWeatherData = {
+          data: newWeatherData,
+          timestamp: new Date().getTime(),
+        };
+        localStorage.setItem("weatherData", JSON.stringify(cacheData));
+
+        setWeatherData(newWeatherData);
         setIsLoading(false);
       } catch (err) {
         console.error("Error fetching weather:", err);
