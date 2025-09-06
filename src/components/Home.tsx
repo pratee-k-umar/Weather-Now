@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useWeather } from "../hooks/useWeather";
 
 interface HomeProps {
   is24Hour: boolean;
@@ -17,6 +18,7 @@ export default function Home({ is24Hour }: HomeProps) {
   const [error, setError] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { fetchWeatherData, isLoading: weatherLoading } = useWeather();
 
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
