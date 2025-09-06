@@ -23,8 +23,8 @@ function App() {
           localStorage.setItem("timeFormat", value ? "24h" : "12h");
         }}
       />
-      {activeTab === "clock" ? <Home is24Hour={is24Hour} /> : <Search />}
-      <BottomNavigation activeTab={activeTab} setActiveTab={handleTabChange} />
+      {activeTab === "clock" ? <Home is24Hour={is24Hour} /> : <Search is24Hour={is24Hour} />}
+      <BottomNavigation activeTab={activeTab} setActiveTab={handleTabChange} /> 
     </div>
   );
 }

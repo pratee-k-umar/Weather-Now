@@ -1,76 +1,33 @@
 import { useState, useEffect } from "react";
 import { useWeather } from "../hooks/useWeather";
+import { useWeatherByLocation } from "../hooks/useWeatherByLocation";
 
 interface HomeProps {
   is24Hour: boolean;
+  selectedPlace?: any | null;
 }
 
-interface CachedWeatherData {
-  data: any;
-  timestamp: number;
-}
-
-export default function Home({ is24Hour }: HomeProps) {
+export default function Home({ is24Hour, selectedPlace = null }: HomeProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [latitude, setLatitude] = useState(null);
-  const [longitude, setLongitude] = useState(null);
-  const [locationDetails, setLocationDetails] = useState(null);
-  const [error, setError] = useState(null);
-  const [weatherData, setWeatherData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { fetchWeatherData, isLoading: weatherLoading } = useWeather();
-
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+  const { weatherData, locationDetails, isLoading, error } =
+    useWeatherByLocation(selectedPlace);
 
   useEffect(() => {
-    const timerId = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    let timerId: number | undefined;
+    if (!selectedPlace) {
+      timerId = setInterval(() => setCurrentTime(new Date()), 1000);
+    }
     return () => clearInterval(timerId);
-  }, []);
-
-  const timeLocale = is24Hour ? "en-GB" : "en-US";
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
-        },
-        (err) => {
-          setError(err.message);
-          setPlaceName("Could not retrieve location.");
-        },
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
-      );
-    } else {
-      setError("Geolocation is not supported by this browser.");
-      setPlaceName("Geolocation not supported.");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (latitude && longitude) {
-      fetch(
-        `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=9af3f0061e8043b69670120f30fa57a1`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.results && data.results.length > 0) {
-            const components = data.results[0].components;
-            setLocationDetails({
-              city: components.city || components.town || components.village,
-              state: components.state,
-              country: components.country,
-            });
-          }
-        })
-        .catch((err) => console.error("Error fetching location details:", err));
-    }
-  }, [latitude, longitude]);
+  }, [selectedPlace]);
 
   const getTimeComponents = () => {
+    const timeToDisplay =
+      selectedPlace && weatherData?.time
+        ? new Date(weatherData.time)
+        : currentTime;
+
+    const timeLocale = is24Hour ? "en-GB" : "en-US";
+
     return {
       hours: currentTime
         .toLocaleTimeString(timeLocale, {
@@ -93,70 +50,18 @@ export default function Home({ is24Hour }: HomeProps) {
         })
         .padStart(2, "0"),
 
-      period: !is24Hour
-        ? currentTime.toLocaleTimeString("en-US", { hour12: true }).slice(-2)
-        : "",
+      period:
+        !is24Hour && !selectedPlace
+          ? timeToDisplay
+              .toLocaleTimeString("en-US", { hour12: true })
+              .slice(-2)
+          : !is24Hour && selectedPlace
+          ? new Date(weatherData?.time)
+              .toLocaleTimeString("en-US", { hour12: true, timeZone: "UTC" })
+              .slice(-2)
+          : "",
     };
   };
-
-  const getStoredWeatherData = () => {
-    const storedData = localStorage.getItem("weatherData");
-    if (!storedData) return null;
-
-    const cachedData: CachedWeatherData = JSON.parse(storedData);
-    const now = new Date().getTime();
-
-    // Check if cache is still valid (less than 5 minutes old)
-    if (now - cachedData.timestamp < CACHE_DURATION) {
-      return cachedData.data;
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    const fetchWeather = async () => {
-      if (!latitude || !longitude) return;
-
-      // Check cache first
-      const cachedData = getStoredWeatherData();
-      if (cachedData) {
-        console.log("Using cached weather data");
-        setWeatherData(cachedData);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const weather_data = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=auto`
-        );
-        const weather_json = await weather_data.json();
-
-        const newWeatherData = {
-          temperature: weather_json.current_weather.temperature,
-          windSpeed: weather_json.current_weather.windspeed,
-          weatherCode: weather_json.current_weather.weathercode,
-          humidity: weather_json.current_weather.humidity || 50,
-        };
-
-        // Store in localStorage with timestamp
-        const cacheData: CachedWeatherData = {
-          data: newWeatherData,
-          timestamp: new Date().getTime(),
-        };
-        localStorage.setItem("weatherData", JSON.stringify(cacheData));
-
-        setWeatherData(newWeatherData);
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching weather:", err);
-        setIsLoading(false);
-      }
-    };
-
-    fetchWeather();
-  }, [latitude, longitude]);
 
   const getWeatherIcon = (code: any) => {
     if (code === 0) return "clear_day";
@@ -275,9 +180,7 @@ export default function Home({ is24Hour }: HomeProps) {
       <div className="mx-5">
         {locationDetails ? (
           <div className="text-[65px] font-medium leading-none">
-            <p>{locationDetails.city},</p>
-            <p>{locationDetails.state},</p>
-            <p>{locationDetails.country}</p>
+            <p>{locationDetails}</p>
           </div>
         ) : (
           <p>{error ? error : "Getting location..."}</p>

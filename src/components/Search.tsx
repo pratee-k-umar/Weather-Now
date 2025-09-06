@@ -1,35 +1,30 @@
 import { useEffect, useState } from "react";
 import { useWeather } from "../hooks/useWeather";
+import Home from "./Home";
 
-interface Place {
-  display_name: string;
-  lat: string;
-  lon: string;
+interface SearchProps {
+  is24Hour: boolean;
 }
 
-interface PlaceWithWeather extends Place {
-  weather?: {
-    temperature: number;
-    weatherCode: number;
-    windSpeed: number;
-    humidity: number;
-  };
-}
-
-export default function Search() {
+export default function Search({ is24Hour }: SearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [places, setPlaces] = useState<PlaceWithWeather[]>([]);
+  const [places, setPlaces] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { fetchWeatherData } = useWeather();
 
+  const [selectedPlace, setSelectedPlace] = useState<any | null>(() => {
+    const savedPlace = localStorage.getItem("selectedPlace");
+    return savedPlace ? JSON.parse(savedPlace) : null;
+  });
+
   useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
+      setPlaces([]);
+      return;
+    }
+
     let isActive = true;
     const fetchPlaces = async () => {
-      if (!searchQuery.trim() || searchQuery.length < 3) {
-        setPlaces([]);
-        return;
-      }
-
       setIsSearching(true);
       try {
         const response = await fetch(
@@ -37,33 +32,60 @@ export default function Search() {
             searchQuery
           )}&format=json&limit=5`
         );
-        const data: PlaceWithWeather[] = await response.json();
+        const data = await response.json();
 
+        // Now, fetch weather for each place
         const placesWithWeather = await Promise.all(
-          data.map(async (place) => {
+          data.map(async (place: any) => {
             const weather = await fetchWeatherData(
               parseFloat(place.lat),
               parseFloat(place.lon)
             );
-            return { ...place, weather };
+            return { ...place, weather }; // Attach weather data to the place object
           })
         );
 
         if (isActive) {
           setPlaces(placesWithWeather);
-          setIsSearching(false);
         }
       } catch (error) {
         console.error("Error fetching places:", error);
-        if (isActive) setIsSearching(false);
+      } finally {
+        if (isActive) {
+          setIsSearching(false);
+        }
       }
     };
+
     const timeoutId = setTimeout(fetchPlaces, 600);
+
     return () => {
       isActive = false;
       clearTimeout(timeoutId);
     };
-  }, [fetchWeatherData, searchQuery]);
+  }, [searchQuery, fetchWeatherData]);
+
+  const handleSelectPlace = (place: any) => {
+    localStorage.setItem("selectedPlace", JSON.stringify(place));
+    setSelectedPlace(place);
+  };
+
+  if (selectedPlace) {
+    return (
+      <div>
+        <button
+          onClick={() => {
+            setSelectedPlace(null);
+            localStorage.removeItem("selectedPlace");
+          }}
+          className="m-5 p-2 border border-slate-300 rounded-lg hover:bg-slate-100"
+        >
+          &larr; Back to Search
+        </button>
+        <Home is24Hour={is24Hour} selectedPlace={selectedPlace} />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -93,16 +115,19 @@ export default function Search() {
           {places.map((place, index) => (
             <div
               key={index}
+              onClick={() => handleSelectPlace(place)}
               className="p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              <p className="font-medium">{place.display_name}</p>
-              {place.weather && (
-                <div className="mt-2 text-sm text-gray-600 grid grid-cols-3 gap-2">
-                  <p>{place.weather.temperature}°C</p>
-                  <p>{place.weather.windSpeed} km/h</p>
-                  <p>{place.weather.humidity}%</p>
-                </div>
-              )}
+              <div className="flex justify-between items-center">
+                <p className="font-medium w-5/6">{place.display_name}</p>
+                {place.weather ? (
+                  <p className="font-bold text-lg text-gray-700">
+                    {place.weather.temperature}°C
+                  </p>
+                ) : (
+                  <div className="h-5 w-5 animate-spin border-2 border-black border-t-transparent rounded-full"></div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -110,3 +135,4 @@ export default function Search() {
     </div>
   );
 }
+
