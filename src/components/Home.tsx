@@ -136,7 +136,7 @@ export default function Home({ is24Hour, selectedPlace = null }: HomeProps) {
                 weatherData.weatherCode
               )}.png`}
               alt="weather icon"
-              className="brightness-0 w-30"
+              className="w-30"
             />
           )}
         </div>
@@ -157,7 +157,7 @@ export default function Home({ is24Hour, selectedPlace = null }: HomeProps) {
                 <img
                   src="weather_icons/humidity_low.png"
                   alt="humidity_icon"
-                  className="brightness-0 w-5"
+                  className="w-5"
                 />
                 <p className="text-xl font-bold">{weatherData.humidity}%</p>
               </div>
