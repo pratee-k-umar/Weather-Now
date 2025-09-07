@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useWeather } from "../hooks/useWeather";
 import { useWeatherByLocation } from "../hooks/useWeatherByLocation";
 
 interface HomeProps {

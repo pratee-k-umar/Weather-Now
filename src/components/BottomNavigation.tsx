@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface BottomNavigationProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
