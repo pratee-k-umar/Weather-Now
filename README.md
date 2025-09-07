@@ -42,7 +42,7 @@ This application uses the **OpenCage Geocoding API** to determine the name of yo
 3.  Open the `.env.local` file and add your API key in the following format:
 
 ```env
-VITE_OPENCAGE_API_KEY=YOUR_API_KEY_HERE
+VITE_OPEN_CAGE_API_KEY=YOUR_API_KEY_HERE
 ```
 
 4.  Replace `YOUR_API_KEY_HERE` with your actual key from the OpenCage dashboard.
