@@ -1,69 +1,79 @@
-# React + TypeScript + Vite
+# Weather Now
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple and elegant weather application built with React, Vite, and TypeScript that provides real-time weather data for your current location or any place worldwide.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Current Location Weather**: Automatically fetches and displays the weather for your current location on startup.
+- **Global Search**: Search for any city or location to get its current weather conditions.
+- **Detailed Weather Data**: Displays the current temperature, a weather summary (e.g., "Clear and bright skies"), humidity, and wind speed.
+- **Localized Time**: Shows the correct local time for the location being viewed, whether it's your current location or a browsed one.
+- **Persistent Selection**: Remembers your last searched location and loads it automatically the next time you open the search page.
+- **12/24 Hour Format**: Easily toggle between 12-hour and 24-hour time formats.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Framework**: [React](https://reactjs.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **APIs**:
+  - [Open-Meteo](https://open-meteo.com/) for weather data.
+  - [Nominatim (OpenStreetMap)](https://nominatim.org/) for forward geocoding (search).
+  - [OpenCage](https://opencagedata.com/) for reverse geocoding (getting location name from coordinates).
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Follow these instructions to get the project up and running on your local machine.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/en/) (v18.x or later recommended)
+- [npm](https://www.npmjs.com/) (comes with Node.js)
+
+### 1. API Key Setup
+
+This application uses the **OpenCage Geocoding API** to determine the name of your current location from your browser's coordinates.
+
+1.  Go to [opencagedata.com](https://opencagedata.com/) and sign up for a free account to get an API key.
+2.  In the **root directory** of the project, create a new file named `.env.local`.
+3.  Open the `.env.local` file and add your API key in the following format:
+
+```env
+VITE_OPENCAGE_API_KEY=YOUR_API_KEY_HERE
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+4.  Replace `YOUR_API_KEY_HERE` with your actual key from the OpenCage dashboard.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**Important**: After creating or changing the `.env.local` file, you must **restart your development server** for the new variable to be loaded.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+
+### 2. Installation
+
+Clone the repository (or use your existing project files) and install the necessary dependencies.
+
+```bash
+npm install
 ```
+
+### 3. Running the Development Server
+
+Once the dependencies are installed, you can start the local development server.
+
+```bash
+npm run dev
+```
+
+The application should now be running on `http://localhost:5173` (or another port if 5173 is busy).
+
+## How to Use
+
+- **Home Screen**: When you first load the app, it will ask for your location to show you the local weather. The clock on this screen is a live, running clock for your current time.
+- **Search Screen**: Click the search icon in the bottom navigation to go to the search page.
+  - Type a location name (at least 3 characters) to see a list of results.
+  - Each result in the list will show its current temperature.
+  - Click on a result to see its full weather details.
+  - The clock on this view shows the static, local time for the searched place.
+  - Click the "Back to Search" button to return to the search input. Your previous search term and results will still be there.

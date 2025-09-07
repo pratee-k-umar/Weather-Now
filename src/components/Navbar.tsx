@@ -11,11 +11,11 @@ function Navbar({ is24Hour, setIs24Hour }: NavbarProps) {
       <img src="logo.png" alt="Logo" className="w-15" />
       <div className="slider rounded-full w-28 h-9 relative shadow-xl">
         <div
-          className={`absolute inset-y-0 my-auto w-[52px] h-8 bg-black rounded-full shadow transition-all duration-300 mx-0.5 ${
+          className={`absolute inset-y-0 my-auto bg-black w-[52px] h-8 rounded-full transition-all duration-300 mx-0.5 z-2 ${
             is24Hour ? "translate-x-[54px]" : ""
           }`}
         />
-        <div className="relative flex h-full">
+        <div className="relative flex h-full rounded-full bg-white">
           <button
             className={`w-[54px] h-full z-10 transition-colors duration-300 ${
               !is24Hour ? "text-white" : "text-black"

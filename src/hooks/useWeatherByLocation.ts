@@ -50,7 +50,7 @@ export const useWeatherByLocation = (place: any | null) => {
 
           try {
             const response = await fetch(
-              `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=9af3f0061e8043b69670120f30fa57a1`
+              `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${import.meta.env.VITE_OPEN_CAGE_API_KEY}`
             );
             const data = await response.json();
             if (data.results && data.results.length > 0) {
